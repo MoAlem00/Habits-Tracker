@@ -1,0 +1,385 @@
+/*
+  Habits PWA — dark, calm theme.
+  Mobile-first: we design for iPhone width first, then everything still works on desktop.
+  The CSS custom properties (var(--name)) at the top make it easy to retheme later.
+*/
+
+:root {
+  --bg: #0d1117;            /* near-black background, easy on the eyes */
+  --bg-elev: #161b22;       /* slightly lighter for cards / rows */
+  --bg-elev-2: #1f2630;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --accent: #4ade80;        /* calm green — used for "done" and progress */
+  --accent-dim: #1f3b2a;
+  --yellow: #facc15;
+  --gray: #30363d;
+  --danger: #f87171;
+  --radius: 14px;
+  --tap: 48px;              /* minimum tap target — accessibility */
+}
+
+/* Reset-ish basics so we don't fight default browser margins. */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-tap-highlight-color: transparent; /* removes the gray flash on iOS taps */
+  /* env(safe-area-inset-*) avoids content hiding under the iPhone notch / home bar. */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  overflow: hidden;       /* each screen handles its own scrolling */
+}
+
+/* ---------------------------------------------------------------
+   Screen routing: only the .active screen is shown.
+   Using display:none would break video preloading, so we use
+   visibility + position to swap which one the user sees.
+--------------------------------------------------------------- */
+.screen {
+  position: fixed;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 16px;
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+.screen.active { display: flex; }
+
+.hidden { display: none !important; }
+
+/* ---------------------------------------------------------------
+   Buttons — large tap targets, two visual styles.
+--------------------------------------------------------------- */
+.btn {
+  min-height: var(--tap);
+  padding: 0 18px;
+  border-radius: var(--radius);
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.08s ease, background 0.15s ease;
+}
+.btn:active { transform: scale(0.97); }
+
+.btn-primary { background: var(--accent); color: #07120c; }
+.btn-ghost   { background: var(--bg-elev); color: var(--text); }
+.btn.full-width { width: 100%; margin-top: 8px; }
+
+/* ===================== VIDEO SCREEN ===================== */
+#video-screen { padding: 0; background: #000; }
+
+#motivation-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;       /* fill the screen even if aspect ratios differ */
+  background: #000;
+}
+
+.video-overlay {
+  position: absolute;
+  top: max(20px, env(safe-area-inset-top));
+  right: 20px;
+}
+
+.ready-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 24px;
+  text-align: center;
+}
+.ready-overlay h1 { font-size: 32px; margin: 0; }
+.ready-overlay .muted { color: var(--muted); }
+.ready-overlay code {
+  background: var(--bg-elev);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* ===================== APP HEADER ===================== */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.app-header h1 {
+  font-size: 22px;
+  margin: 0;
+  font-weight: 700;
+}
+
+/* ===================== WEEK STRIP (Fitness-app style) ===================== */
+.week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  padding: 0 4px;
+}
+.week-arrow {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 24px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.week-arrow:active { background: var(--bg-elev); }
+.week-arrow:disabled { opacity: 0.25; cursor: default; }
+.week-label {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.week-strip {
+  touch-action: pan-y; /* let vertical scroll work but capture horizontal swipes */
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 20px;
+  padding: 12px 4px;
+  background: var(--bg-elev);
+  border-radius: var(--radius);
+}
+.week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.week-day.today .week-day-label { color: var(--accent); font-weight: 700; }
+.week-day.future { opacity: 0.4; }
+.week-day.tappable { cursor: pointer; border-radius: 8px; padding: 4px 2px; }
+.week-day.tappable:active { background: var(--bg-elev-2); }
+.week-day-num {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.week-day.today .week-day-num { color: var(--accent); }
+
+/* SVG progress ring is sized via its parent. */
+.ring {
+  width: 36px;
+  height: 36px;
+  display: block;
+}
+.ring-track { stroke: var(--gray); fill: none; stroke-width: 4; }
+.ring-fill  { stroke: var(--accent); fill: none; stroke-width: 4; stroke-linecap: round;
+              transform: rotate(-90deg); transform-origin: 50% 50%; /* start ring from top */
+              transition: stroke-dashoffset 0.4s ease; }
+
+/* ===================== HABITS LIST ===================== */
+.habits-list { list-style: none; margin: 0 0 16px; padding: 0; }
+.habit-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-elev);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  min-height: var(--tap);
+  cursor: pointer;
+  user-select: none;
+}
+.habit-row.done { background: var(--accent-dim); }
+.habit-row .check {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--muted);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+  color: transparent;
+}
+.habit-row.done .check {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #07120c;
+}
+.habit-row .name { font-size: 17px; flex: 1; }
+.habit-row.done .name { color: var(--muted); text-decoration: line-through; }
+
+.empty-msg { color: var(--muted); text-align: center; padding: 24px; }
+
+/* ===================== ADD HABIT ROW ===================== */
+.add-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.add-row input {
+  flex: 1;
+  min-height: var(--tap);
+  padding: 0 14px;
+  background: var(--bg-elev);
+  color: var(--text);
+  border: 1px solid var(--gray);
+  border-radius: var(--radius);
+  font-size: 16px;   /* 16px+ prevents iOS auto-zoom on focus */
+}
+.add-row input:focus { outline: none; border-color: var(--accent); }
+
+/* ===================== DAY PICKER ===================== */
+.day-picker-wrap { margin-bottom: 16px; }
+.day-picker {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.day-chip {
+  height: 36px;
+  border-radius: 18px;
+  border: 1.5px solid var(--gray);
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.day-chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #07120c;
+}
+.day-chip:active { transform: scale(0.94); }
+
+/* ===================== MANAGE MODAL ===================== */
+.modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+.modal.hidden { display: none; }
+.modal-content {
+  background: var(--bg-elev);
+  border-radius: var(--radius);
+  padding: 20px;
+  width: 100%;
+  max-width: 420px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.modal-content h2 { margin-top: 0; }
+.modal-content ul { list-style: none; padding: 0; margin: 0 0 16px; }
+.manage-row {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gray);
+}
+.manage-row-top {
+  display: flex; align-items: center; gap: 8px;
+}
+.manage-row input {
+  flex: 1;
+  min-height: 40px;
+  padding: 0 10px;
+  background: var(--bg-elev-2);
+  color: var(--text);
+  border: 1px solid var(--gray);
+  border-radius: 8px;
+  font-size: 16px;
+}
+.manage-row .delete {
+  background: transparent;
+  color: var(--danger);
+  border: none;
+  font-size: 22px;
+  min-width: 40px;
+  cursor: pointer;
+}
+
+/* ===================== CALENDAR ===================== */
+.month-nav { display: flex; justify-content: space-between; margin-bottom: 12px; }
+.month-nav .btn { min-width: 60px; }
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.stat {
+  background: var(--bg-elev);
+  border-radius: var(--radius);
+  padding: 14px;
+  text-align: center;
+}
+.stat-value { font-size: 28px; font-weight: 700; color: var(--accent); }
+.stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.cal-head {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 4px 0;
+}
+.cal-day {
+  aspect-ratio: 1 / 1;
+  background: var(--gray);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--text);
+}
+.cal-day.empty { background: transparent; }
+.cal-day.green  { background: var(--accent); color: #07120c; font-weight: 700; }
+.cal-day.yellow { background: var(--yellow); color: #1a1500; font-weight: 700; }
+.cal-day.today  { outline: 2px solid var(--text); outline-offset: -2px; }
+.cal-day.future { opacity: 0.4; }
+
+.legend {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.legend .dot {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.legend .green  { background: var(--accent); }
+.legend .yellow { background: var(--yellow); }
+.legend .gray   { background: var(--gray); }

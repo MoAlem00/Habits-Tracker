@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <!--
+    viewport: fit=cover lets us draw under the iPhone notch / home indicator.
+    user-scalable=no avoids accidental pinch-zoom in an "app-like" experience.
+  -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#0d1117" />
+
+  <!-- PWA manifest: tells the browser this is an installable app. -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- iOS-specific tags. iOS doesn't fully read manifest.json, so we set these too. -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Habits" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <title>Habits</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!--
+    The app has three "screens". We toggle the .active class on whichever one
+    should be visible. This is simpler than a router library for a 3-screen app.
+  -->
+
+  <!-- ===================== VIDEO SCREEN ===================== -->
+  <section id="video-screen" class="screen active">
+    <video id="motivation-video" playsinline preload="auto"></video>
+
+    <div class="video-overlay">
+      <!-- Skip button is hidden until MIN_WATCH_SECONDS have elapsed. -->
+      <button id="skip-btn" class="btn btn-ghost hidden" type="button">Skip</button>
+    </div>
+
+    <!-- Shown after the video ends (or after Skip). -->
+    <div id="ready-overlay" class="ready-overlay hidden">
+      <h1>Let's go.</h1>
+      <button id="ready-btn" class="btn btn-primary" type="button">I'm ready</button>
+    </div>
+
+    <!-- Shown if the playlist is empty (no local files and no remote URLs). -->
+    <div id="no-video" class="ready-overlay hidden">
+      <h1>Welcome.</h1>
+      <p class="muted">Add motivational .mp4 files to the <code>/videos</code> folder.</p>
+      <button id="no-video-continue" class="btn btn-primary" type="button">Continue</button>
+    </div>
+  </section>
+
+  <!-- ===================== TRACKER SCREEN ===================== -->
+  <section id="tracker-screen" class="screen">
+    <header class="app-header">
+      <h1 id="today-label">Today</h1>
+      <button id="go-calendar" class="btn btn-ghost" type="button" aria-label="Open calendar">📅</button>
+    </header>
+
+    <!-- iPhone Fitness-style 7-day strip (Sun-Sat). Each day = a progress ring. -->
+    <div class="week-nav">
+      <button id="prev-week" class="week-arrow" type="button" aria-label="Previous week">‹</button>
+      <div id="week-label" class="week-label">This week</div>
+      <button id="next-week" class="week-arrow" type="button" aria-label="Next week">›</button>
+    </div>
+    <div id="week-strip" class="week-strip" role="list"></div>
+
+    <!-- Today's habits list. Each row toggles done/not-done on tap. -->
+    <ul id="habits-list" class="habits-list"></ul>
+
+    <!-- Add / manage habits -->
+    <div class="add-row">
+      <input id="new-habit-input" type="text" placeholder="New habit (e.g. Workout)" maxlength="40" />
+      <button id="add-habit-btn" class="btn btn-primary" type="button">Add</button>
+    </div>
+    <!-- Day picker for the new habit. Tap days to schedule it. -->
+    <div id="add-day-picker" class="day-picker-wrap"></div>
+
+    <button id="manage-btn" class="btn btn-ghost full-width" type="button">Manage habits</button>
+  </section>
+
+  <!-- ===================== CALENDAR SCREEN ===================== -->
+  <section id="calendar-screen" class="screen">
+    <header class="app-header">
+      <button id="back-to-tracker" class="btn btn-ghost" type="button" aria-label="Back">←</button>
+      <h1 id="month-label">Month</h1>
+      <span style="width:44px"></span><!-- spacer to balance the back button -->
+    </header>
+
+    <div class="month-nav">
+      <button id="prev-month" class="btn btn-ghost" type="button">‹</button>
+      <button id="next-month" class="btn btn-ghost" type="button">›</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="stat-streak">0</div>
+        <div class="stat-label">Current streak</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="stat-total">0</div>
+        <div class="stat-label">Disciplined days</div>
+      </div>
+    </div>
+
+    <div id="calendar-grid" class="calendar-grid"></div>
+
+    <div class="legend">
+      <span><i class="dot green"></i> All done</span>
+      <span><i class="dot yellow"></i> Some done</span>
+      <span><i class="dot gray"></i> None</span>
+    </div>
+  </section>
+
+  <!-- ===================== DAY DETAIL MODAL ===================== -->
+  <!-- Opened when a circle in the week strip is tapped. Shows that day's
+       habits with their done/not-done state, and lets you toggle them. -->
+  <div id="day-detail-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <h2 id="day-detail-title">Day</h2>
+      <ul id="day-detail-list" class="habits-list"></ul>
+      <button id="close-day-detail" class="btn btn-primary full-width" type="button">Done</button>
+    </div>
+  </div>
+
+  <!-- ===================== MANAGE HABITS MODAL ===================== -->
+  <div id="manage-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <h2>Manage habits</h2>
+      <ul id="manage-list"></ul>
+      <button id="close-manage" class="btn btn-primary full-width" type="button">Done</button>
+    </div>
+  </div>
+
+  <!--
+    type="module" lets us split JS into small files with import/export.
+    No build step needed — modern browsers (including iOS Safari) handle it.
+  -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
