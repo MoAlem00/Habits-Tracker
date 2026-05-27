@@ -55,18 +55,48 @@ export function initVideoScreen(onDone) {
   const src = PLAYLIST[Math.floor(Math.random() * PLAYLIST.length)];
   video.src = src;
 
-  // iOS Safari blocks autoplay UNLESS the video is muted + playsinline.
-  // We accept muted autoplay; the user can unmute via the native controls
-  // if we choose to show them (we don't, to keep it distraction-free).
-  video.muted = true;
+  // playsinline lets the video stay embedded (no fullscreen takeover on iOS).
   video.playsInline = true;
   video.autoplay = true;
 
-  // Try to play. If the browser rejects (rare with muted+playsinline),
-  // we just show the "I'm ready" overlay so the user isn't stuck.
-  video.play().catch(() => {
-    readyOverlay.classList.remove('hidden');
-  });
+  // ----- Sound strategy --------------------------------------------------
+  // iOS Safari blocks UNMUTED autoplay unless the user has already
+  // interacted with the page in this session. So:
+  //   1. Try unmuted first — works on Android/desktop and on iOS after
+  //      the first run (Safari remembers).
+  //   2. If iOS rejects, fall back to muted + show a "Tap for sound"
+  //      button. The user's tap counts as interaction, so we can then
+  //      unmute without restarting the video.
+  video.muted = false;
+
+  const unmuteBtn = document.getElementById('unmute-btn');
+
+  video.play()
+    .then(() => {
+      // Unmuted autoplay worked — no extra UI needed.
+      unmuteBtn.classList.add('hidden');
+    })
+    .catch(() => {
+      // Blocked. Retry muted (this almost always succeeds on iOS).
+      video.muted = true;
+      video.play().catch(() => {
+        // Even muted failed for some reason — show ready overlay so the
+        // user isn't stuck staring at a frozen video.
+        readyOverlay.classList.remove('hidden');
+      });
+      // Show the tap-for-sound button.
+      unmuteBtn.classList.remove('hidden');
+    });
+
+  // Tapping the unmute button (or the video itself) enables sound. We
+  // listen on the whole video element too, so the user can tap anywhere.
+  function enableSound() {
+    video.muted = false;
+    // Setting muted doesn't restart playback, so volume comes on instantly.
+    unmuteBtn.classList.add('hidden');
+  }
+  unmuteBtn.addEventListener('click', enableSound);
+  video.addEventListener('click', enableSound);
 
   // Show the Skip button after MIN_WATCH_SECONDS.
   // If MIN_WATCH_SECONDS is 0, show it immediately.

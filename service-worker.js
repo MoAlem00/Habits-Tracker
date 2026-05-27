@@ -12,7 +12,7 @@
   caches them at the network layer when first played.
 */
 
-const CACHE_VERSION = 'habits-v4';
+const CACHE_VERSION = 'habits-v6';
 
 const APP_SHELL = [
   './',

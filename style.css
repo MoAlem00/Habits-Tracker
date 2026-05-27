@@ -93,6 +93,25 @@ body {
   right: 20px;
 }
 
+/* Floating "Tap for sound" pill, shown only if iOS blocked unmuted autoplay. */
+.unmute-btn {
+  position: absolute;
+  bottom: max(32px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+}
+.unmute-btn:active { transform: translateX(-50%) scale(0.96); }
+
 .ready-overlay {
   position: absolute;
   inset: 0;
