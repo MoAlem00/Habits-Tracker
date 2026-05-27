@@ -29,8 +29,7 @@ const MIN_WATCH_SECONDS = 15;
 */
 const PLAYLIST = [
   // Example remote clips (replace whenever you like):
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+  'videos/video.mp4',
 
   // Add your own local files like this once you put them in /videos:
   // 'videos/motivation-1.mp4',
